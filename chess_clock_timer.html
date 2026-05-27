@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Clock Focus Timer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .timer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .timer-card {
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            border: 0.5px solid #e0e0e0;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .timer-card.active {
+            border: 2px solid #4CAF50;
+            background: #f1f5f0;
+        }
+        
+        .timer-card.active.distracted {
+            border: 2px solid #ff9800;
+            background: #fff3e0;
+        }
+        
+        .timer-label {
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .timer-card.active .timer-label {
+            color: #2e7d32;
+        }
+        
+        .timer-card.active.distracted .timer-label {
+            color: #e65100;
+        }
+        
+        .timer-card:not(.active) .timer-label {
+            color: #999;
+        }
+        
+        .timer-time {
+            font-size: 48px;
+            font-weight: 500;
+            margin: 0.5rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .timer-card.active .timer-time {
+            color: #2e7d32;
+        }
+        
+        .timer-card.active.distracted .timer-time {
+            color: #e65100;
+        }
+        
+        .timer-percentage {
+            font-size: 12px;
+            color: #999;
+            margin-top: 0.5rem;
+        }
+        
+        .timer-card.active .timer-percentage {
+            color: #2e7d32;
+        }
+        
+        .timer-card.active.distracted .timer-percentage {
+            color: #e65100;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        button {
+            padding: 12px 16px;
+            border: 0.5px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        button:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+        
+        #startBtn {
+            flex: 1;
+            color: #2e7d32;
+            border-color: #4CAF50;
+        }
+        
+        #startBtn.running {
+            color: #c62828;
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        
+        #switchBtn {
+            flex: 1;
+            color: #555;
+        }
+        
+        #switchBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: #ccc;
+        }
+        
+        #resetBtn {
+            padding: 12px;
+            aspect-ratio: 1;
+        }
+        
+        .stats {
+            background: white;
+            border: 0.5px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stats-label {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-time {
+            font-size: 28px;
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .instructions {
+            background: #f9f9f9;
+            border: 0.5px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .instructions p {
+            margin: 0.25rem 0;
+        }
+        
+        .instructions strong {
+            color: #333;
+        }
+        
+        i {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer-grid">
+            <div class="timer-card active" id="focusCard">
+                <div class="timer-label">
+                    <i class="ti ti-focus-2"></i>
+                    Focused
+                </div>
+                <div class="timer-time" id="focusTime">00:00</div>
+                <div class="timer-percentage" id="focusPercent">0% of total</div>
+            </div>
+            
+            <div class="timer-card" id="distractedCard">
+                <div class="timer-label">
+                    <i class="ti ti-alert-circle"></i>
+                    Distracted
+                </div>
+                <div class="timer-time" id="distractedTime">00:00</div>
+                <div class="timer-percentage" id="distractedPercent">0% of total</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">
+                <i class="ti ti-player-play"></i>
+                Start
+            </button>
+            <button id="switchBtn" disabled>
+                <i class="ti ti-arrows-exchange-2"></i>
+                Switch
+            </button>
+            <button id="resetBtn">
+                <i class="ti ti-rotate-clockwise-2"></i>
+            </button>
+        </div>
+        
+        <div class="stats">
+            <div class="stats-label">Total time tracked</div>
+            <div class="stats-time" id="totalTime">00:00</div>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>How to use:</strong></p>
+            <p>1. Click <strong>Start</strong> to begin tracking focus time</p>
+            <p>2. Click <strong>Switch</strong> when you get distracted</p>
+            <p>3. Click <strong>Switch</strong> again to resume focus</p>
+            <p>4. Use the reset button to start over</p>
+        </div>
+    </div>
+    
+    <script>
+        let focusTime = 0;
+        let distractedTime = 0;
+        let isRunning = false;
+        let activeTimer = 'focus';
+        let intervalId = null;
+        
+        const startBtn = document.getElementById('startBtn');
+        const switchBtn = document.getElementById('switchBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const focusCard = document.getElementById('focusCard');
+        const distractedCard = document.getElementById('distractedCard');
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        
+        function updateDisplay() {
+            document.getElementById('focusTime').textContent = formatTime(focusTime);
+            document.getElementById('distractedTime').textContent = formatTime(distractedTime);
+            document.getElementById('totalTime').textContent = formatTime(focusTime + distractedTime);
+            
+            const total = focusTime + distractedTime;
+            const focusPercent = total > 0 ? Math.round((focusTime / total) * 100) : 0;
+            const distractedPercent = 100 - focusPercent;
+            
+            document.getElementById('focusPercent').textContent = `${focusPercent}% of total`;
+            document.getElementById('distractedPercent').textContent = `${distractedPercent}% of total`;
+        }
+        
+        function updateActiveCard() {
+            focusCard.classList.toggle('active', activeTimer === 'focus');
+            distractedCard.classList.toggle('active', activeTimer === 'distracted');
+            distractedCard.classList.toggle('distracted', activeTimer === 'distracted');
+        }
+        
+        startBtn.addEventListener('click', function() {
+            isRunning = !isRunning;
+            switchBtn.disabled = !isRunning;
+            
+            if (isRunning) {
+                startBtn.innerHTML = '<i class="ti ti-player-pause"></i>Pause';
+                startBtn.classList.add('running');
+                
+                intervalId = setInterval(function() {
+                    if (activeTimer === 'focus') {
+                        focusTime++;
+                    } else {
+                        distractedTime++;
+                    }
+                    updateDisplay();
+                }, 1000);
+            } else {
+                startBtn.innerHTML = '<i class="ti ti-player-play"></i>Start';
+                startBtn.classList.remove('running');
+                clearInterval(intervalId);
+            }
+        });
+        
+        switchBtn.addEventListener('click', function() {
+            if (isRunning) {
+                activeTimer = activeTimer === 'focus' ? 'distracted' : 'focus';
+                updateActiveCard();
+            }
+        });
+        
+        resetBtn.addEventListener('click', function() {
+            isRunning = false;
+            focusTime = 0;
+            distractedTime = 0;
+            activeTimer = 'focus';
+            clearInterval(intervalId);
+            
+            startBtn.innerHTML = '<i class="ti ti-player-play"></i>Start';
+            startBtn.classList.remove('running');
+            switchBtn.disabled = true;
+            
+            updateDisplay();
+            updateActiveCard();
+        });
+        
+        updateDisplay();
+        updateActiveCard();
+    </script>
+</body>
+</html>
