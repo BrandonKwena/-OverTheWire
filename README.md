@@ -263,4 +263,4 @@ Compression tools you may need: `gzip`, `bzip2`, `tar`
 
 ---
 
-*Writeups by [Your Name] — OverTheWire Bandit Wargame*
+*Writeups by Brandon — OverTheWire Bandit Wargame*
